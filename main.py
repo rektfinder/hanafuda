@@ -21,7 +21,7 @@ RPC_URL = "https://mainnet.base.org"
 CONTRACT_ADDRESS = "0xC5bf05cD32a14BFfb705Fb37a9d218895187376c"
 AMOUNT_ETH = 0.0000000001  # Amount of ETH to be deposited
 web3 = Web3(Web3.HTTPProvider(RPC_URL))
-
+api_url = "https://hanafuda-backend-app-520478841386.us-central1.run.app/graphql"
 with open("pvkey.txt", "r") as file:
     private_keys = [line.strip() for line in file if line.strip()]
 
@@ -79,7 +79,7 @@ async def handle_grow_and_garden(refresh_token):
         "query": "query CurrentUser { currentUser { id sub name iconPath depositCount totalPoint evmAddress { userId address } inviter { id name } } }",
         "operationName": "CurrentUser"
     }
-    info = await colay("https://hanafuda-backend-app-520478841386.us-central1.run.app/graphql", 'POST', info_query)
+    info = await colay(api_url, 'POST', info_query)
     
     balance = info['data']['currentUser']['totalPoint']
     deposit = info['data']['currentUser']['depositCount']
@@ -88,7 +88,7 @@ async def handle_grow_and_garden(refresh_token):
         "query": "query GetGardenForCurrentUser { getGardenForCurrentUser { id inviteCode gardenDepositCount gardenStatus { id activeEpoch growActionCount gardenRewardActionCount } gardenMilestoneRewardInfo { id gardenDepositCountWhenLastCalculated lastAcquiredAt createdAt } gardenMembers { id sub name iconPath depositCount } } }",
         "operationName": "GetGardenForCurrentUser"
     }
-    profile = await colay("https://hanafuda-backend-app-520478841386.us-central1.run.app/graphql", 'POST', bet_query)
+    profile = await colay(api_url, 'POST', bet_query)
     
     grow = profile['data']['getGardenForCurrentUser']['gardenStatus']['growActionCount']
     garden = profile['data']['getGardenForCurrentUser']['gardenStatus']['gardenRewardActionCount']
@@ -99,7 +99,7 @@ async def handle_grow_and_garden(refresh_token):
             "query": "mutation issueGrowAction { issueGrowAction }",
             "operationName": "issueGrowAction"
         }
-        mine = await colay("https://hanafuda-backend-app-520478841386.us-central1.run.app/graphql", 'POST', action_query)
+        mine = await colay(api_url, 'POST', action_query)
         reward = mine['data']['issueGrowAction']
         balance = balance + reward
         grow -= 1
@@ -110,7 +110,7 @@ async def handle_grow_and_garden(refresh_token):
             "query": "mutation commitGrowAction { commitGrowAction }",
             "operationName": "commitGrowAction"
         }
-        await colay("https://hanafuda-backend-app-520478841386.us-central1.run.app/graphql", 'POST', commit_query)
+        await colay(api_url, 'POST', commit_query)
 
     while garden >= 10:
         garden_action_query = {
@@ -118,7 +118,7 @@ async def handle_grow_and_garden(refresh_token):
             "variables": {"limit": 10},
             "operationName": "executeGardenRewardAction"
         }
-        mine_garden = await colay("https://hanafuda-backend-app-520478841386.us-central1.run.app/graphql", 'POST', garden_action_query)
+        mine_garden = await colay(api_url, 'POST', garden_action_query)
         card_ids = [item['data']['cardId'] for item in mine_garden['data']['executeGardenRewardAction']]
         print(f"{Fore.GREEN}Opened Garden: {card_ids}{Style.RESET_ALL}")
         garden -= 10
